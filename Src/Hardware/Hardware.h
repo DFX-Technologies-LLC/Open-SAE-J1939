@@ -9,14 +9,15 @@
 #define HARDWARE_HARDWARE_H_
 
 /* Select your processor choice here */
-#define NO_PROCESSOR 0
-#define STM32 1
-#define ARDUINO 2
-#define PIC 3
-#define AVR 4
-#define QT_USB 5
-#define INTERNAL_CALLBACK 6
-#define PROCESSOR_CHOICE NO_PROCESSOR
+#define NO_PROCESSOR             0
+#define STM32                    1
+#define ARDUINO                  2
+#define PIC                      3
+#define AVR                      4
+#define QT_USB                   5
+#define INTERNAL_CALLBACK        6
+#define PROCESSOR_CHOICE         INTERNAL_CALLBACK
+#define ECU_DATA_STORING_ENABLED 0
 
 /* C Standard library */
 #include "../Open_SAE_J1939/C89_Library.h"

@@ -12,19 +12,18 @@
 #include "Structs.h"
 
 /* Layers */
+#include "../SAE_J1939/SAE_J1939-21_Transport_Layer/Transport_Layer.h"
 #include "../SAE_J1939/SAE_J1939-71_Application_Layer/Application_Layer.h"
 #include "../SAE_J1939/SAE_J1939-73_Diagnostics_Layer/Diagnostics_Layer.h"
 #include "../SAE_J1939/SAE_J1939-81_Network_Management_Layer/Network_Management_Layer.h"
-#include "../SAE_J1939/SAE_J1939-21_Transport_Layer/Transport_Layer.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-
 /* Enum for the supported functionality */
 typedef enum {
-	RX_MSG_NONE = 0,
+    RX_MSG_NONE = 0,
     RX_MSG_ACK,
     RX_MSG_REQ,
     RX_MSG_REQ_DM14,
@@ -51,13 +50,13 @@ typedef enum {
 } ENUM_J1939_RX_MSG;
 
 /* This functions must be called all the time, or be placed inside an interrupt listener */
-ENUM_J1939_RX_MSG Open_SAE_J1939_Listen_For_Messages(J1939 *j1939);
+ENUM_J1939_RX_MSG Open_SAE_J1939_Listen_For_Messages(J1939_t* j1939);
 
 /* This function should ONLY be called at your ECU startup */
-bool Open_SAE_J1939_Startup_ECU(J1939* j1939);
+bool Open_SAE_J1939_Startup_ECU(J1939_t* j1939);
 
 /* This function should ONLY be called at your ECU closedown */
-bool Open_SAE_J1939_Closedown_ECU(J1939* j1939);
+bool Open_SAE_J1939_Closedown_ECU(J1939_t* j1939);
 
 #ifdef __cplusplus
 }

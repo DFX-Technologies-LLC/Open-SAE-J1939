@@ -37,28 +37,31 @@ ENUM_J1939_RX_MSG Open_SAE_J1939_Listen_For_Messages(J1939_t* j1939)
             && (DA == j1939->information_this_ECU.this_ECU_address || DA == 0xFF)) {
             SAE_J1939_Read_Request(j1939, SA, data);
             rx_msg = RX_MSG_REQ;
-        } else if (id0 == 0x18 && id1 == 0xD9
-                   && DA == j1939->information_this_ECU.this_ECU_address) {
-            SAE_J1939_Read_Request_DM14(j1939, SA, data);
-            rx_msg = RX_MSG_REQ_DM14;
+        }
+        // else if (id0 == 0x18 && id1 == 0xD9
+        //            && DA == j1939->information_this_ECU.this_ECU_address) {
+        //     SAE_J1939_Read_Request_DM14(j1939, SA, data);
+        //     rx_msg = RX_MSG_REQ_DM14;
 
-            /* Read status from other ECU */
-        } else if (id0 == 0x18 && id1 == 0xE8
-                   && DA == j1939->information_this_ECU.this_ECU_address) {
+        // }
+        /* Read status from other ECU */
+        else if (id0 == 0x18 && id1 == 0xE8 && DA == j1939->information_this_ECU.this_ECU_address) {
             SAE_J1939_Read_Acknowledgement(j1939, SA, data);
             rx_msg = RX_MSG_ACK;
-        } else if (id0 == 0x18 && id1 == 0xD8
-                   && DA == j1939->information_this_ECU.this_ECU_address) {
-            SAE_J1939_Read_Response_DM15(j1939, SA, data);
-            rx_msg = RX_MSG_DM15;
-        } else if (id0 == 0x18 && id1 == 0xD7
-                   && DA == j1939->information_this_ECU.this_ECU_address) {
-            SAE_J1939_Read_Binary_Data_Transfer_DM16(j1939, SA, data);
-            rx_msg = RX_MSG_DM16;
-
-            /* Read Transport Protocol information from other ECU */
-        } else if (id0 == 0x1C && id1 == 0xEC
-                   && (DA == j1939->information_this_ECU.this_ECU_address || DA == 0xFF)) {
+        }
+        // else if (id0 == 0x18 && id1 == 0xD8
+        //            && DA == j1939->information_this_ECU.this_ECU_address) {
+        //     SAE_J1939_Read_Response_DM15(j1939, SA, data);
+        //     rx_msg = RX_MSG_DM15;
+        // }
+        // else if (id0 == 0x18 && id1 == 0xD7
+        //            && DA == j1939->information_this_ECU.this_ECU_address) {
+        //     SAE_J1939_Read_Binary_Data_Transfer_DM16(j1939, SA, data);
+        //     rx_msg = RX_MSG_DM16;
+        // }
+        /* Read Transport Protocol information from other ECU */
+        else if (id0 == 0x1C && id1 == 0xEC
+                 && (DA == j1939->information_this_ECU.this_ECU_address || DA == 0xFF)) {
             SAE_J1939_Read_Transport_Protocol_Connection_Management(j1939, SA, data);
             rx_msg = RX_MSG_TP_CONN_MANAGEMENT;
         } else if (id0 == 0x1C && id1 == 0xEB
@@ -72,7 +75,7 @@ ENUM_J1939_RX_MSG Open_SAE_J1939_Listen_For_Messages(J1939_t* j1939)
             SAE_J1939_Read_Response_Request_Proprietary_A(j1939,
                                                           SA,
                                                           data); /* Manufacturer specific data */
-            rx_msg = RX_MSG_RESP_REQ_PROPRIETRATY_A;
+            rx_msg = RX_MSG_RESP_REQ_PROPRIETARY_A;
         } else if (id0 == 0x18 && id1 == 0xEE && DA == 0xFF && SA != 0xFE) {
             SAE_J1939_Read_Response_Request_Address_Claimed(
                 j1939,

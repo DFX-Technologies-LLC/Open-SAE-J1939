@@ -5,13 +5,13 @@ project(
   default_options: ['warning_level=3'],
 )
 
-j1939_include_directories = []
-j1939_include_directories += 'Src/Hardware'
-j1939_include_directories += 'Src/ISO_11783'
-j1939_include_directories += 'Src/Open_SAE_J1939'
-j1939_include_directories += 'Src/SAE_J1939'
+open_sae_j1939_include_directories = []
+open_sae_j1939_include_directories += 'Src/Hardware'
+open_sae_j1939_include_directories += 'Src/ISO_11783'
+open_sae_j1939_include_directories += 'Src/Open_SAE_J1939'
+open_sae_j1939_include_directories += 'Src/SAE_J1939'
 
-j1939_sources = files(
+open_sae_j1939_sources = files(
   'Src/Hardware/CAN_Transmit_Receive.c',
   'Src/Hardware/FLASH_EEPROM_RAM_Memory.c',
   'Src/Hardware/Save_Load_Struct.c',
@@ -43,8 +43,10 @@ j1939_sources = files(
   'Src/SAE_J1939/SAE_J1939-81_Network_Management_Layer/Commanded_Address.c',
 )
 
+open_sae_j1939_c_args = ['-Wno-pedantic', '-Wno-unused-parameter']
+
 open_sae_j1939_dep = declare_dependency(
-  sources: [j1939_sources],
-  dependencies: [],
-  include_directories: j1939_include_directories,
+  sources: [open_sae_j1939_sources],
+  compile_args: open_sae_j1939_c_args,
+  include_directories: open_sae_j1939_include_directories,
 )

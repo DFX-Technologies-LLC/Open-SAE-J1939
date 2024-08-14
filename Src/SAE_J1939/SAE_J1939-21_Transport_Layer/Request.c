@@ -13,7 +13,6 @@
 #include "../SAE_J1939-73_Diagnostics_Layer/Diagnostics_Layer.h"
 #include "../SAE_J1939-81_Network_Management_Layer/Network_Management_Layer.h"
 
-
 /*
  * Read a PGN request from another ECU about PGN information at this ECU. All listed PGN should be
  * here PGN: 0x00EA00 (59904)

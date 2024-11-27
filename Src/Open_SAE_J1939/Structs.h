@@ -22,7 +22,7 @@
 /* This is the maximum size for transferring data and these can be changed on your own interest */
 #define MAX_TP_DT          1785U
 #define MAX_IDENTIFICATION 30U
-#define MAX_DM_FIELD       10U
+#define MAX_DM_FIELD       30U
 #define MAX_PROPRIETARY    15U
 
 /* PGN: 0x00E800 - Storing the Acknowledgement from the reading process */

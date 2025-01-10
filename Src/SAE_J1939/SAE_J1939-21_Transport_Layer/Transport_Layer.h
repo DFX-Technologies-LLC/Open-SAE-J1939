@@ -18,13 +18,25 @@
 #include "../SAE_J1939_Enums/Enum_PGN.h"
 #include "../SAE_J1939_Enums/Enum_Send_Status.h"
 
-
 /* Layers */
 #include "../../Hardware/Hardware.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+typedef enum {
+    RX_TP_MSG_NONE = 0,
+    RX_TP_MSG_CM_CONN,
+    RX_TP_MSG_TP_CONN_DATA_TRANSFER,
+    RX_TP_MSG_RESP_REQ_DM1,
+    RX_TP_MSG_RESP_REQ_DM2,
+    RX_TP_MSG_DM16,
+    RX_TP_MSG_RESP_REQ_SOFTWARE_IDENTIFICATION,
+    RX_TP_MSG_RESP_REQ_ECU_IDENTIFICATION,
+    RX_TP_MSG_RESP_REQ_COMPONENT_IDENTIFICATION,
+    RX_TP_MSG_RESP_REQ_PROPRIETARY_A
+} ENUM_J1939_RX_TP_MSG;
 
 /* Acknowledgement */
 void SAE_J1939_Read_Acknowledgement(J1939_t* j1939, uint8_t SA, uint8_t data[]);
@@ -46,7 +58,8 @@ ENUM_J1939_STATUS_CODES SAE_J1939_Send_Transport_Protocol_Connection_Management(
                                                                                 uint8_t DA);
 
 /* Transport Protocol Data Transfer */
-void SAE_J1939_Read_Transport_Protocol_Data_Transfer(J1939_t* j1939, uint8_t SA, uint8_t data[]);
+ENUM_J1939_RX_TP_MSG
+SAE_J1939_Read_Transport_Protocol_Data_Transfer(J1939_t* j1939, uint8_t SA, uint8_t data[]);
 ENUM_J1939_STATUS_CODES SAE_J1939_Send_Transport_Protocol_Data_Transfer(J1939_t* j1939, uint8_t DA);
 
 #ifdef __cplusplus

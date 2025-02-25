@@ -12,13 +12,15 @@
 #include "../SAE_J1939-73_Diagnostics_Layer/Diagnostics_Layer.h"
 #include "../SAE_J1939-81_Network_Management_Layer/Network_Management_Layer.h"
 
-
 /*
  * Store the sequence data packages from other ECU
  * PGN: 0x00EB00 (60160)
  */
-void SAE_J1939_Read_Transport_Protocol_Data_Transfer(J1939_t* j1939, uint8_t SA, uint8_t data[])
+ENUM_J1939_RX_TP_MSG
+SAE_J1939_Read_Transport_Protocol_Data_Transfer(J1939_t* j1939, uint8_t SA, uint8_t data[])
 {
+    ENUM_J1939_RX_TP_MSG msg_type = RX_TP_MSG_NONE;
+
     /* Save the sequence data */
     j1939->from_other_ecu_tp_dt.sequence_number = data[0];
     j1939->from_other_ecu_tp_dt.from_ecu_address = SA;
@@ -39,7 +41,7 @@ void SAE_J1939_Read_Transport_Protocol_Data_Transfer(J1939_t* j1939, uint8_t SA,
             j1939->this_ecu_tp_cm.next_packet_number_transmitted++;
             SAE_J1939_Send_Transport_Protocol_Connection_Management(j1939, SA);
         }
-        return;
+        return RX_TP_MSG_CM_CONN;
     }
 
     /* Our message are complete - Build it and call it complete_data[total_message_size] */
@@ -70,6 +72,7 @@ void SAE_J1939_Read_Transport_Protocol_Data_Transfer(J1939_t* j1939, uint8_t SA,
             SAE_J1939_Read_Commanded_Address(
                 j1939,
                 complete_data); /* Insert new name and new address to this ECU */
+            msg_type = RX_TP_MSG_TP_CONN_DATA_TRANSFER;
             break;
         case PGN_DM1:
             SAE_J1939_Read_Response_Request_DM1(
@@ -78,6 +81,7 @@ void SAE_J1939_Read_Transport_Protocol_Data_Transfer(J1939_t* j1939, uint8_t SA,
                 complete_data,
                 (total_message_size - 2)
                     / 4); /* Number of DTCs = 4 bytes per DTC excluding 2 bytes for the lamp */
+            msg_type = RX_TP_MSG_RESP_REQ_DM1;
             break;
         case PGN_DM2:
             SAE_J1939_Read_Response_Request_DM2(
@@ -86,19 +90,27 @@ void SAE_J1939_Read_Transport_Protocol_Data_Transfer(J1939_t* j1939, uint8_t SA,
                 complete_data,
                 (total_message_size - 2)
                     / 4); /* Number of DTCs = 4 bytes per DTC excluding 2 bytes for the lamp */
+            msg_type = RX_TP_MSG_RESP_REQ_DM1;
             break;
-        case PGN_DM16: SAE_J1939_Read_Binary_Data_Transfer_DM16(j1939, SA, complete_data); break;
+        case PGN_DM16:
+            SAE_J1939_Read_Binary_Data_Transfer_DM16(j1939, SA, complete_data);
+            msg_type = RX_TP_MSG_DM16;
+            break;
         case PGN_SOFTWARE_IDENTIFICATION:
             SAE_J1939_Read_Response_Request_Software_Identification(j1939, SA, complete_data);
+            msg_type = RX_TP_MSG_RESP_REQ_SOFTWARE_IDENTIFICATION;
             break;
         case PGN_ECU_IDENTIFICATION:
             SAE_J1939_Read_Response_Request_ECU_Identification(j1939, SA, complete_data);
+            msg_type = RX_TP_MSG_RESP_REQ_ECU_IDENTIFICATION;
             break;
         case PGN_COMPONENT_IDENTIFICATION:
             SAE_J1939_Read_Response_Request_Component_Identification(j1939, SA, complete_data);
+            msg_type = RX_TP_MSG_RESP_REQ_COMPONENT_IDENTIFICATION;
             break;
         case PGN_PROPRIETARY_A:
             SAE_J1939_Read_Response_Request_Proprietary_A(j1939, SA, complete_data);
+            msg_type = RX_TP_MSG_RESP_REQ_PROPRIETARY_A;
             break;
             /* Add more here */
     }
@@ -106,6 +118,8 @@ void SAE_J1939_Read_Transport_Protocol_Data_Transfer(J1939_t* j1939, uint8_t SA,
     /* Delete TP DT and TP CM */
     memset(&j1939->from_other_ecu_tp_dt, 0, sizeof(j1939->from_other_ecu_tp_dt));
     memset(&j1939->from_other_ecu_tp_cm, 0, sizeof(j1939->from_other_ecu_tp_cm));
+
+    return msg_type;
 }
 
 /*

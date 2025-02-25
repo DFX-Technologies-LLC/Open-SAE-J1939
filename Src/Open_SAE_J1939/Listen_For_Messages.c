@@ -66,8 +66,13 @@ ENUM_J1939_RX_MSG Open_SAE_J1939_Listen_For_Messages(J1939_t* j1939)
             rx_msg = RX_MSG_TP_CONN_MANAGEMENT;
         } else if (id0 == 0x1C && id1 == 0xEB
                    && (DA == j1939->information_this_ECU.this_ECU_address || DA == 0xFF)) {
-            SAE_J1939_Read_Transport_Protocol_Data_Transfer(j1939, SA, data);
-            rx_msg = RX_MSG_TP_CONN_DATA_TRANSFER;
+            ENUM_J1939_RX_TP_MSG rx_tp_msg_type
+                = SAE_J1939_Read_Transport_Protocol_Data_Transfer(j1939, SA, data);
+            if (rx_tp_msg_type == RX_TP_MSG_RESP_REQ_DM1) {
+                rx_msg = RX_MSG_RESP_REQ_DM1;
+            } else {
+                rx_msg = RX_MSG_TP_CONN_DATA_TRANSFER;
+            }
 
             /* Read response request from other ECU - This are response request. They are responses
              * from other ECU about request from this ECU */

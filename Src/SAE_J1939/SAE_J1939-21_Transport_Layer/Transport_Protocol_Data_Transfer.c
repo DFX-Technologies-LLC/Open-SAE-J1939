@@ -90,7 +90,7 @@ SAE_J1939_Read_Transport_Protocol_Data_Transfer(J1939_t* j1939, uint8_t SA, uint
                 complete_data,
                 (total_message_size - 2)
                     / 4); /* Number of DTCs = 4 bytes per DTC excluding 2 bytes for the lamp */
-            msg_type = RX_TP_MSG_RESP_REQ_DM1;
+            msg_type = RX_TP_MSG_RESP_REQ_DM2;
             break;
         case PGN_DM16:
             SAE_J1939_Read_Binary_Data_Transfer_DM16(j1939, SA, complete_data);

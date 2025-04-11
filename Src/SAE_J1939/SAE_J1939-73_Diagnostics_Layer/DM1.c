@@ -145,7 +145,7 @@ void SAE_J1939_Read_Response_Request_DM1(J1939_t* j1939,
      * and no active messages are left */
     if (errors_dm1_active == 1 && j1939->from_other_ecu_dm.dm1.SPN[0] == 0) {
         j1939->from_other_ecu_dm.errors_dm1_active = 0;
-    } else if (j1939->from_other_ecu_dm.errors_dm1_active < errors_dm1_active) {
+    } else {
         j1939->from_other_ecu_dm.errors_dm1_active = errors_dm1_active;
     }
 }

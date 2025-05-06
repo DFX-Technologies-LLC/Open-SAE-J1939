@@ -24,50 +24,52 @@ ENUM_J1939_RX_MSG Open_SAE_J1939_Listen_For_Messages(J1939_t* j1939)
         memcpy(j1939->data, data, 8);
         j1939->ID_and_data_is_updated = true;
 
-        uint8_t id0 = ID >> 24;
-        uint8_t id1 = ID >> 16;
-        uint8_t DA = ID >> 8; /* Destination address which is this ECU. if DA = 0xFF = broadcast to
-                                 all ECU. Sometimes DA can be an ID number too */
-        uint8_t SA = ID; /* Source address of the ECU that we got the message from */
+        // priority, extended data page and data page are not used
+        uint8_t pdu_format = ID >> 16; // first part of PGN
+        uint8_t pdu_specific = ID >> 8; // second part of PGN or destination address
+        uint8_t source_address = ID;
 
         rx_msg = RX_MSG_NOT_SUPPORTED;
 
         /* Read request from other ECU */
-        if (id0 == 0x18 && id1 == 0xEA
-            && (DA == j1939->information_this_ECU.this_ECU_address || DA == 0xFF)) {
-            SAE_J1939_Read_Request(j1939, SA, data);
+        if (pdu_format == 0xEA
+            && (pdu_specific == j1939->information_this_ECU.this_ECU_address
+                || pdu_specific == 0xFF)) {
+            SAE_J1939_Read_Request(j1939, source_address, data);
             rx_msg = RX_MSG_REQ;
         }
-        // else if (id0 == 0x18 && id1 == 0xD9
-        //            && DA == j1939->information_this_ECU.this_ECU_address) {
-        //     SAE_J1939_Read_Request_DM14(j1939, SA, data);
+        // else if (pdu_format == 0xD9
+        //            && pdu_specific == j1939->information_this_ECU.this_ECU_address) {
+        //     SAE_J1939_Read_Request_DM14(j1939, source_address, data);
         //     rx_msg = RX_MSG_REQ_DM14;
-
         // }
         /* Read status from other ECU */
-        else if (id0 == 0x18 && id1 == 0xE8 && DA == j1939->information_this_ECU.this_ECU_address) {
-            SAE_J1939_Read_Acknowledgement(j1939, SA, data);
+        else if (pdu_format == 0xE8
+                 && pdu_specific == j1939->information_this_ECU.this_ECU_address) {
+            SAE_J1939_Read_Acknowledgement(j1939, source_address, data);
             rx_msg = RX_MSG_ACK;
         }
-        // else if (id0 == 0x18 && id1 == 0xD8
-        //            && DA == j1939->information_this_ECU.this_ECU_address) {
-        //     SAE_J1939_Read_Response_DM15(j1939, SA, data);
+        // else if (pdu_format == 0xD8
+        //            && pdu_specific == j1939->information_this_ECU.this_ECU_address) {
+        //     SAE_J1939_Read_Response_DM15(j1939, source_address, data);
         //     rx_msg = RX_MSG_DM15;
         // }
-        // else if (id0 == 0x18 && id1 == 0xD7
-        //            && DA == j1939->information_this_ECU.this_ECU_address) {
-        //     SAE_J1939_Read_Binary_Data_Transfer_DM16(j1939, SA, data);
+        // else if (pdu_format == 0xD7
+        //            && pdu_specific == j1939->information_this_ECU.this_ECU_address) {
+        //     SAE_J1939_Read_Binary_Data_Transfer_DM16(j1939, source_address, data);
         //     rx_msg = RX_MSG_DM16;
         // }
         /* Read Transport Protocol information from other ECU */
-        else if (id0 == 0x1C && id1 == 0xEC
-                 && (DA == j1939->information_this_ECU.this_ECU_address || DA == 0xFF)) {
-            SAE_J1939_Read_Transport_Protocol_Connection_Management(j1939, SA, data);
+        else if (pdu_format == 0xEC
+                 && (pdu_specific == j1939->information_this_ECU.this_ECU_address
+                     || pdu_specific == 0xFF)) {
+            SAE_J1939_Read_Transport_Protocol_Connection_Management(j1939, source_address, data);
             rx_msg = RX_MSG_TP_CONN_MANAGEMENT;
-        } else if (id0 == 0x1C && id1 == 0xEB
-                   && (DA == j1939->information_this_ECU.this_ECU_address || DA == 0xFF)) {
+        } else if (pdu_format == 0xEB
+                   && (pdu_specific == j1939->information_this_ECU.this_ECU_address
+                       || pdu_specific == 0xFF)) {
             ENUM_J1939_RX_TP_MSG rx_tp_msg_type
-                = SAE_J1939_Read_Transport_Protocol_Data_Transfer(j1939, SA, data);
+                = SAE_J1939_Read_Transport_Protocol_Data_Transfer(j1939, source_address, data);
             if (rx_tp_msg_type == RX_TP_MSG_RESP_REQ_DM1) {
                 rx_msg = RX_MSG_RESP_REQ_DM1;
             } else if (rx_tp_msg_type == RX_TP_MSG_RESP_REQ_DM2) {
@@ -78,78 +80,81 @@ ENUM_J1939_RX_MSG Open_SAE_J1939_Listen_For_Messages(J1939_t* j1939)
 
             /* Read response request from other ECU - This are response request. They are responses
              * from other ECU about request from this ECU */
-        } else if (id0 == 0x14 && id1 == 0xEF && DA == 0x23) {
+        } else if (pdu_format == 0xEF && pdu_specific == 0x23) {
             SAE_J1939_Read_Response_Request_Proprietary_A(j1939,
-                                                          SA,
+                                                          source_address,
                                                           data); /* Manufacturer specific data */
             rx_msg = RX_MSG_RESP_REQ_PROPRIETARY_A;
-        } else if (id0 == 0x18 && id1 == 0xEE && DA == 0xFF && SA != 0xFE) {
+        } else if (pdu_format == 0xEE && pdu_specific == 0xFF && source_address != 0xFE) {
             SAE_J1939_Read_Response_Request_Address_Claimed(
                 j1939,
-                SA,
+                source_address,
                 data); /* This is a broadcast response request */
             rx_msg = RX_MSG_RESP_REQ_ADDR_CLAIMED;
-        } else if (id0 == 0x18 && id1 == 0xEE && DA == 0xFF && SA == 0xFE) {
-            SAE_J1939_Read_Address_Not_Claimed(j1939, SA, data); /* This is error */
+        } else if (pdu_format == 0xEE && pdu_specific == 0xFF && source_address == 0xFE) {
+            SAE_J1939_Read_Address_Not_Claimed(j1939, source_address, data); /* This is error */
             rx_msg = RX_MSG_ADDR_NOT_CLAIMED;
 
-        } else if (id0 == 0x18 && id1 == 0xFE && DA == 0xCA) {
+        } else if (pdu_format == 0xFE && pdu_specific == 0xCA) {
             SAE_J1939_Read_Response_Request_DM1(j1939,
-                                                SA,
+                                                source_address,
                                                 data,
                                                 1); /* Assume that errors_dm1_active = 1 */
             rx_msg = RX_MSG_RESP_REQ_DM1;
-        } else if (id0 == 0x18 && id1 == 0xFE && DA == 0xCB) {
+        } else if (pdu_format == 0xFE && pdu_specific == 0xCB) {
             SAE_J1939_Read_Response_Request_DM2(j1939,
-                                                SA,
+                                                source_address,
                                                 data,
                                                 1); /* Assume that errors_dm2_active = 1 */
             rx_msg = RX_MSG_RESP_REQ_DM2;
-        } else if (id0 == 0x18 && id1 == 0xFE && DA == 0xDA) {
-            SAE_J1939_Read_Response_Request_Software_Identification(j1939, SA, data);
+        } else if (pdu_format == 0xFE && pdu_specific == 0xDA) {
+            SAE_J1939_Read_Response_Request_Software_Identification(j1939, source_address, data);
             rx_msg = RX_MSG_RESP_REQ_SOFTWARE_IDENTIFICATION;
-        } else if (id0 == 0x18 && id1 == 0xFD && DA == 0xC5) {
-            SAE_J1939_Read_Response_Request_ECU_Identification(j1939, SA, data);
+        } else if (pdu_format == 0xFD && pdu_specific == 0xC5) {
+            SAE_J1939_Read_Response_Request_ECU_Identification(j1939, source_address, data);
             rx_msg = RX_MSG_RESP_REQ_ECU_IDENTIFICATION;
-        } else if (id0 == 0x18 && id1 == 0xFE && DA == 0xEB) {
-            SAE_J1939_Read_Response_Request_Component_Identification(j1939, SA, data);
+        } else if (pdu_format == 0xFE && pdu_specific == 0xEB) {
+            SAE_J1939_Read_Response_Request_Component_Identification(j1939, source_address, data);
             rx_msg = RX_MSG_RESP_REQ_COMPONENT_IDENTIFICATION;
-        } else if (id0 == 0x0C && id1 == 0xFE && DA >= 0x10 && DA <= 0x1F) {
+        } else if (pdu_format == 0xFE && pdu_specific >= 0x10 && pdu_specific <= 0x1F) {
             ISO_11783_Read_Response_Request_Auxiliary_Estimated_Flow(
                 j1939,
-                SA,
-                DA & 0xF,
-                data); /* DA & 0xF = Valve number. Total 16 valves from 0 to 15 */
+                source_address,
+                pdu_specific & 0xF,
+                data); /* pdu_specific & 0xF = Valve number. Total 16 valves from 0 to 15 */
             rx_msg = RX_MSG_RESP_REQ_AUX_ESTIMATED_FLOW;
-        } else if (id0 == 0x0C && id1 == 0xC6
-                   && DA == j1939->information_this_ECU.this_ECU_address) {
-            ISO_11783_Read_Response_Request_General_Purpose_Valve_Estimated_Flow(j1939, SA, data);
+        } else if (pdu_format == 0xC6
+                   && pdu_specific == j1939->information_this_ECU.this_ECU_address) {
+            ISO_11783_Read_Response_Request_General_Purpose_Valve_Estimated_Flow(j1939,
+                                                                                 source_address,
+                                                                                 data);
             rx_msg = RX_MSG_RESP_REQ_GP_VALVE_ESTIMATED_FLOW;
-        } else if (id0 == 0x0C && id1 == 0xFF && DA >= 0x20 && DA <= 0x2F) {
+        } else if (pdu_format == 0xFF && pdu_specific >= 0x20 && pdu_specific <= 0x2F) {
             ISO_11783_Read_Response_Request_Auxiliary_Valve_Measured_Position(
                 j1939,
-                SA,
-                DA & 0xF,
-                data); /* DA & 0xF = Valve number. Total 16 valves from 0 to 15 */
+                source_address,
+                pdu_specific & 0xF,
+                data); /* pdu_specific & 0xF = Valve number. Total 16 valves from 0 to 15 */
             rx_msg = RX_MSG_RESP_REQ_AUX_VALVE_MEASURED_POSITION;
 
             /* Read command from other ECU */
-        } else if (id0 == 0x0C && id1 == 0xFE && DA >= 0x30 && DA <= 0x3F) {
+        } else if (pdu_format == 0xFE && pdu_specific >= 0x30 && pdu_specific <= 0x3F) {
             ISO_11783_Read_Auxiliary_Valve_Command(
                 j1939,
-                SA,
-                DA & 0xF,
-                data); /* DA & 0xF = Valve number. Total 16 valves from 0 to 15 */
+                source_address,
+                pdu_specific & 0xF,
+                data); /* pdu_specific & 0xF = Valve number. Total 16 valves from 0 to 15 */
             rx_msg = RX_MSG_AUX_VALVE_CMD;
-        } else if (id0 == 0x0C && id1 == 0xC4
-                   && DA == j1939->information_this_ECU.this_ECU_address) {
+        } else if (pdu_format == 0xC4
+                   && pdu_specific == j1939->information_this_ECU.this_ECU_address) {
             ISO_11783_Read_General_Purpose_Valve_Command(
                 j1939,
-                SA,
+                source_address,
                 data); /* General Purpose Valve Command have only one valve */
             rx_msg = RX_MSG_GP_VALVE_CMD;
-        } else if (id0 == 0x0 && id1 == 0x2
-                   && (DA == j1939->information_this_ECU.this_ECU_address || DA == 0xFF)) {
+        } else if (pdu_format == 0x2
+                   && (pdu_specific == j1939->information_this_ECU.this_ECU_address
+                       || pdu_specific == 0xFF)) {
             SAE_J1939_Read_Address_Delete(j1939, data); /* Not a SAE J1939 standard */
             rx_msg = RX_MSG_NOT_SAE_J1939;
         } else {
